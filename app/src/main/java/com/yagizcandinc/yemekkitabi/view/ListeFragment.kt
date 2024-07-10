@@ -1,4 +1,4 @@
-package com.yagizcandinc.yemekkitabi
+package com.yagizcandinc.yemekkitabi.view
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
