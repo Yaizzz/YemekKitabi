@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.navigation.Navigation
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.room.Room
+import com.yagizcandinc.yemekkitabi.adapter.TarifAdapter
 import com.yagizcandinc.yemekkitabi.databinding.FragmentListeBinding
 import com.yagizcandinc.yemekkitabi.model.Tarif
 import com.yagizcandinc.yemekkitabi.roomdb.TarifDAO
@@ -62,14 +63,12 @@ class ListeFragment : Fragment() {
     }
 
     private fun handleResponse(tarifler : List<Tarif>) {
-        tarifler.forEach{
-            println(it.isim)
-            println(it.malzeme)
-        }
+       val adapter = TarifAdapter(tarifler)
+        binding.tarifRecyclerView.adapter = adapter
     }
 
     fun yeniEkle(view: View){
-        val action = ListeFragmentDirections.actionListeFragmentToTarifFragment(bilgi="yeni",id=0)
+        val action = ListeFragmentDirections.actionListeFragmentToTarifFragment(bilgi="yeni",id=-1)
         Navigation.findNavController(view).navigate(action)
     }
 

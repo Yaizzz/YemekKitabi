@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
@@ -46,6 +47,8 @@ class TarifFragment : Fragment() {
     private lateinit var db : TarifDatabase
     private lateinit var tarifDao : TarifDAO
 
+    private var secilenTarif : Tarif? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         registerLauncher()
@@ -75,6 +78,7 @@ class TarifFragment : Fragment() {
 
             if (bilgi == "yeni"){
              //Yeni tarif eklenece
+                secilenTarif = null
                 binding.silButton.isEnabled = false
                 binding.kaydetButton.isEnabled = true
                 binding.isimText.setText("")
@@ -84,8 +88,24 @@ class TarifFragment : Fragment() {
             //Eski tarif gösteriliyor
                 binding.silButton.isEnabled = true
                 binding.kaydetButton.isEnabled = false
+                val id = TarifFragmentArgs.fromBundle(it).id
+                mDisposable.add(
+                    tarifDao.findById(id)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(this::handleResponse)
+                )
+
             }
         }
+    }
+
+    private fun handleResponse(tarif: Tarif){
+        val bitmap = BitmapFactory.decodeByteArray(tarif.gorsel,0,tarif.gorsel.size)
+        binding.imageView.setImageBitmap(bitmap)
+        binding.isimText.setText(tarif.isim)
+        binding.malzemeText.setText(tarif.malzeme)
+        secilenTarif = tarif
     }
 
 
@@ -124,7 +144,14 @@ class TarifFragment : Fragment() {
     }
 
     fun sil(view: View){
-
+        if(secilenTarif != null){
+            mDisposable.add(
+                tarifDao.delete(tarif = secilenTarif!!)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(this::handleResponseForInsert)//silinince de geri gideceğimiz için
+            )
+        }
     }
 
     fun gorselSec(view: View){
