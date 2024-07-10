@@ -6,18 +6,24 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.Navigation
+import androidx.room.Room
 import com.yagizcandinc.yemekkitabi.databinding.FragmentListeBinding
+import com.yagizcandinc.yemekkitabi.roomdb.TarifDAO
+import com.yagizcandinc.yemekkitabi.roomdb.TarifDatabase
 
 
 class ListeFragment : Fragment() {
 
     private var _binding: FragmentListeBinding? = null
     private val binding get() = _binding!!
+    private lateinit var db : TarifDatabase
+    private lateinit var tarifDao : TarifDAO
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        db = Room.databaseBuilder(requireContext(),TarifDatabase::class.java,"Tarifler").build()
+        tarifDao = db.tarifDAO()
     }
 
     override fun onCreateView(

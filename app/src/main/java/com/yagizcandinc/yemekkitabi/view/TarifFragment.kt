@@ -19,9 +19,16 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.navigation.Navigation
+import androidx.room.Room
 import com.google.android.material.snackbar.Snackbar
 import com.yagizcandinc.yemekkitabi.databinding.FragmentTarifBinding
 import com.yagizcandinc.yemekkitabi.model.Tarif
+import com.yagizcandinc.yemekkitabi.roomdb.TarifDAO
+import com.yagizcandinc.yemekkitabi.roomdb.TarifDatabase
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import io.reactivex.rxjava3.disposables.CompositeDisposable
+import io.reactivex.rxjava3.schedulers.Schedulers
 import java.io.ByteArrayOutputStream
 
 
@@ -34,9 +41,16 @@ class TarifFragment : Fragment() {
     private var secilenGorsel: Uri? = null //Uri kaynağın nerede olduğunu belirtir bize /data/media/a.jpg döner
     private var secilenBitmap: Bitmap? = null//üstteki veriyi alıp görsele çevirir
 
+    private val mDisposable = CompositeDisposable()//devamlı istek yapıldığında hafızada birikmesin diye kullan at çöpünde biriktirip ihtiyaç olunca temizler
+
+    private lateinit var db : TarifDatabase
+    private lateinit var tarifDao : TarifDAO
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         registerLauncher()
+        db = Room.databaseBuilder(requireContext(),TarifDatabase::class.java,"Tarifler").build()
+        tarifDao = db.tarifDAO()
     }
 
     override fun onCreateView(
@@ -86,8 +100,27 @@ class TarifFragment : Fragment() {
             val byteDizisi = outputStream.toByteArray()
 
             val tarif = Tarif(isim,malzeme,byteDizisi)
-        }
 
+            //bu çalışmadı UI ı fazla tıkamamamız lazım
+            //tarifDao.insert(tarif)
+
+            //RXJAVA
+
+            mDisposable.add(
+                tarifDao.insert(tarif)
+                .subscribeOn(Schedulers.io())//işlemi arka planda yapacak
+                .observeOn(AndroidSchedulers.mainThread())//ön planda gösterecek
+                .subscribe(this::handleResponseForInsert)//işlem bittiğinde fonksiyonu çalıştıracak yani sonucu o fonksiyona verecek
+            )
+            //Threading
+            //git işlemi arka planda yap sonucu main threadde bana göster
+        }
+    }
+
+    private fun handleResponseForInsert(){
+        //bir önceki fragmenta dön
+        val action = TarifFragmentDirections.actionTarifFragmentToListeFragment()
+        Navigation.findNavController(requireView()).navigate(action)
     }
 
     fun sil(view: View){
