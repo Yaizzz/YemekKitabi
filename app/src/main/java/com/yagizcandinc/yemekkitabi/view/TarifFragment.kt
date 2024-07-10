@@ -21,6 +21,8 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.material.snackbar.Snackbar
 import com.yagizcandinc.yemekkitabi.databinding.FragmentTarifBinding
+import com.yagizcandinc.yemekkitabi.model.Tarif
+import java.io.ByteArrayOutputStream
 
 
 class TarifFragment : Fragment() {
@@ -74,6 +76,17 @@ class TarifFragment : Fragment() {
 
 
     fun kaydet(view: View){
+        val isim = binding.isimText.text.toString()
+        val malzeme = binding.malzemeText.text.toString()
+        //büyük bir görsel kaydederken küçültmemiz lazım sqlite için bitmap küçültme
+        if(secilenBitmap != null){
+            val kucukBitmap = kucukBitmapOlustur(secilenBitmap!!, maximumBoyut = 300)
+            val outputStream = ByteArrayOutputStream()
+            kucukBitmap.compress(Bitmap.CompressFormat.PNG,50,outputStream)
+            val byteDizisi = outputStream.toByteArray()
+
+            val tarif = Tarif(isim,malzeme,byteDizisi)
+        }
 
     }
 
@@ -183,6 +196,27 @@ class TarifFragment : Fragment() {
                 Toast.makeText(requireContext(),"İzin Verilmedi",Toast.LENGTH_LONG).show()
             }
         }
+    }
+
+    private fun kucukBitmapOlustur(kullanicininSectigiBitmap : Bitmap, maximumBoyut : Int) : Bitmap{
+        var width = kullanicininSectigiBitmap.width
+        var height = kullanicininSectigiBitmap.height
+
+        val bitmapOrani : Double = width.toDouble() / height.toDouble()
+
+        if(bitmapOrani >= 1){
+            //görsel yatay
+            width=maximumBoyut
+            val kisaltilmisYukseklik = width / bitmapOrani
+            height = kisaltilmisYukseklik.toInt()
+        }else{
+            //görsel dikey
+            height=maximumBoyut
+           val kısaltilmisGenislik = height * bitmapOrani
+            width = kısaltilmisGenislik.toInt()
+        }
+
+        return Bitmap.createScaledBitmap(kullanicininSectigiBitmap,width,height,true)
     }
 
     override fun onDestroyView() {
